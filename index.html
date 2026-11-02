@@ -62,14 +62,16 @@
   .note { margin-top: 12px; font-size: 13.5px; color: var(--muted); line-height: 1.5; }
   .note strong { color: var(--text); font-weight: 500; }
   .empty { color: var(--muted); font-size: 14px; }
-  ol.cands { list-style: none; margin: 0; padding: 0; }
-  ol.cands li { display: grid; grid-template-columns: 34px 1fr auto; gap: 4px 10px; padding: 10px 0; border-top: 1px solid var(--line); align-items: start; }
-  ol.cands li:first-child { border-top: none; }
-  ol.cands li.held { background: var(--accent-soft); margin: 0 -10px; padding: 10px; border-radius: 10px; border-top: none; }
-  .rank { font-weight: 700; color: var(--muted); font-size: 14px; padding-top: 2px; }
-  .cand-main { min-width: 0; }
-  .cand-total { font-weight: 500; }
-  .cand-route { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .cand-card { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px 10px; margin-top: 10px; }
+  .cand-card.held { border-color: var(--accent); background: var(--accent-soft); }
+  .cand-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-bottom: 6px; }
+  .cand-head .rank { font-weight: 700; color: var(--accent); font-size: 14px; }
+  .cand-head .cand-total { font-weight: 700; font-size: 17px; }
+  .cand-head .pill { margin-left: auto; align-self: center; }
+  .cand-card .stop .time { font-size: 22px; }
+  .cand-card .stop { min-width: 76px; }
+  .cand-card .rail { font-size: 12px; padding-top: 6px; }
+  .cand-card .transfer { font-size: 12.5px; margin-top: 6px; }
   .cand-sub { color: var(--muted); font-size: 12.5px; }
   details > summary { cursor: pointer; color: var(--accent); font-size: 14px; list-style: none; padding: 8px 0 2px; }
   details > summary::-webkit-details-marker { display: none; }
@@ -88,8 +90,8 @@
     .card { padding: 16px 14px 14px; border-radius: 16px; }
     .stop .time { font-size: 26px; }
     .stop { min-width: 80px; }
-    ol.cands li { grid-template-columns: 28px 1fr; }
-    ol.cands li .pill { grid-column: 2; justify-self: start; }
+    .cand-card .stop .time { font-size: 20px; }
+    .cand-head .pill { margin-left: 0; }
   }
 </style>
 </head>
@@ -155,6 +157,7 @@
     var first = legs[0], last = legs[legs.length - 1];
     var depDoor = it.access_min ? '<div class="door">집에서 ' + it.access_min + "분 잡으면 " + esc(addMinutes(first.dep_time, -it.access_min)) + " 출발</div>" : "";
     var arrDoor = it.egress_min ? '<div class="door">역에서 목적지까지 ' + it.egress_min + "분</div>" : "";
+    if (options.doors === false) { depDoor = ""; arrDoor = ""; }
     var trainLabel = legs.length === 1 ? esc(first.train_type + " " + first.train_no) : esc(legs.map(function (l) { return l.train_type + " " + l.train_no; }).join(" → "));
     var html = '<div class="journey">' +
       '<div class="stop"><div class="time">' + esc(first.dep_time) + '</div><div class="name">' + esc(first.dep) + "</div>" + depDoor + "</div>" +
@@ -189,22 +192,21 @@
   }
   function legsCount(it) { return (it.legs || []).length; }
 
+  function candidateCard(c) {
+    var pill = c.held ? '<span class="pill">지금 표</span>' : c.available ? '<span class="pill ok">좌석 있음</span>' : c.waiting ? '<span class="pill warn">예약대기 가능</span>' : '<span class="pill muted">매진</span>';
+    var breakdown = (c.access_min || c.egress_min) ? '<span class="cand-sub">역까지 ' + c.access_min + "분 + 열차 " + minutes(c.duration_min) + " + 역에서 " + c.egress_min + "분</span>" : "";
+    return '<div class="cand-card' + (c.held ? " held" : "") + '"><div class="cand-head"><span class="rank">' + c.rank + '순위</span><span class="cand-total">' + minutes(c.total_min != null ? c.total_min : c.duration_min) + "</span>" + breakdown + pill + "</div>" + journeyHtml(c, { doors: false }) + "</div>";
+  }
+
   function candidatesHtml(leg) {
     var cands = leg.candidates || [];
     if (!cands.length) return "";
-    var items = cands.map(function (c) {
-      var pill = c.held ? '<span class="pill">지금 표</span>' : c.available ? '<span class="pill ok">좌석 있음</span>' : c.waiting ? '<span class="pill warn">예약대기 가능</span>' : '<span class="pill muted">매진</span>';
-      var legs = c.legs || [];
-      var route = legs.map(function (l) { return esc(l.dep + " " + l.dep_time) + " → " + esc(l.arr + " " + l.arr_time) + ' <span class="cand-sub">' + esc(l.train_type + " " + l.train_no) + "</span>"; }).join(" · 환승 " + (c.transfer_wait_min || 0) + "분 · ");
-      var breakdown = (c.access_min || c.egress_min) ? '<div class="cand-sub">역까지 ' + c.access_min + "분 + 열차 " + minutes(c.duration_min) + " + 역에서 " + c.egress_min + "분</div>" : "";
-      return '<li class="' + (c.held ? "held" : "") + '"><div class="rank">' + c.rank + '</div><div class="cand-main"><div class="cand-total">' + minutes(c.total_min != null ? c.total_min : c.duration_min) + '</div><div class="cand-route">' + route + "</div>" + breakdown + "</div>" + pill + "</li>";
-    });
-    var top = items.slice(0, 5).join("");
-    var rest = items.slice(5).join("");
-    var heading = leg.holding ? "더 좋은 경로 후보 (지금 표보다 빠른 순서)" : "노리고 있는 경로 (빠른 순서)";
+    var cards = cands.map(candidateCard);
+    var heading = leg.holding ? "더 좋은 경로 후보" : "노리고 있는 경로";
     var total = leg.candidate_total || cands.length;
-    return '<div class="card"><h2>' + heading + '</h2><div class="cand-sub" style="margin-bottom:6px">전체 ' + total + "개 중 상위 " + Math.min(cands.length, total) + "개 · 매진이면 취소표가 나올 때 자동으로 잡아요</div>" +
-      '<ol class="cands">' + top + "</ol>" + (rest ? '<details><summary>더 보기 (' + items.slice(5).length + "개)</summary><ol class=\"cands\">" + rest + "</ol></details>" : "") + "</div>";
+    var limit = leg.max_rank ? " · 상위 " + leg.max_rank + "개 안에서만 예매" : "";
+    return '<div class="card"><h2>' + heading + '</h2><div class="cand-sub">빠른 순서 · 전체 ' + total + "개 중 " + cands.length + "개 표시" + limit + " · 매진이면 취소표가 나올 때 자동으로 잡아요</div>" +
+      cards.slice(0, 5).join("") + (cards.length > 5 ? '<details><summary>더 보기 (' + (cards.length - 5) + "개)</summary>" + cards.slice(5).join("") + "</details>" : "") + "</div>";
   }
 
   function historyHtml(leg, job) {
