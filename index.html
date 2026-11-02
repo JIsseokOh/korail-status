@@ -286,7 +286,7 @@
     var staleMin = (Date.now() - new Date(data.generated_at).getTime()) / 60000;
     var live = running.length > 0 && staleMin < 40;
     document.getElementById("status-line").innerHTML = '<span class="dot ' + (live ? "" : "off") + '"></span>' +
-      (running.length ? "취소표 감시 중" : "감시 없음") + " · 마지막 갱신 " + esc(ago(data.generated_at));
+      (running.length ? "취소표 감시 중" : "감시 없음");
     document.getElementById("alert").innerHTML = staleMin > 40 && running.length ? '<div class="alert">갱신이 ' + Math.round(staleMin) + "분째 없어요. 예매를 돌리는 컴퓨터가 꺼졌거나 인터넷이 끊겼을 수 있어요.</div>" : "";
   }
 
