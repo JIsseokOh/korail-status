@@ -108,9 +108,6 @@
   </header>
   <div id="alert"></div>
   <div id="content"></div>
-  <footer>
-    예약번호는 뒤 4자리만 보여요. 페이지는 90초마다 스스로 새로 고칩니다. 데이터는 예매를 돌리는 컴퓨터에서 올라오니, 갱신이 오래 멈춰 있으면 그 컴퓨터가 꺼졌는지 확인해 주세요.
-  </footer>
 </main>
 <script>
 (function () {
@@ -210,9 +207,7 @@
     if (!cands.length) return "";
     var cards = cands.map(candidateCard);
     var heading = leg.holding ? "더 좋은 경로 후보" : "노리고 있는 경로";
-    var total = leg.candidate_total || cands.length;
-    var limit = leg.max_rank ? " · 상위 " + leg.max_rank + "개 안에서만 예매" : "";
-    return '<div class="card"><h2>' + heading + '</h2><div class="cand-sub">빠른 순서 · 전체 ' + total + "개 중 " + cands.length + "개 표시" + limit + " · 매진이면 취소표가 나올 때 자동으로 잡아요</div>" +
+    return '<div class="card"><h2>' + heading + "</h2>" +
       cards.slice(0, 5).join("") + (cards.length > 5 ? '<details><summary>더 보기 (' + (cards.length - 5) + "개)</summary>" + cards.slice(5).join("") + "</details>" : "") + "</div>";
   }
 
@@ -240,11 +235,11 @@
       html += holdingHtml(leg);
       if (leg.watching && leg.held_rank) { var better = leg.max_rank ? Math.min(leg.held_rank - 1, leg.max_rank) : leg.held_rank - 1; html += '<div class="note">지금 표는 <strong>' + leg.held_rank + "번째로 좋은 경로</strong>예요. 더 좋은 " + better + "개 경로에 취소표가 나오면 자동으로 바꾸고 알려 드려요.</div>"; }
     } else if (leg.watching || leg.status === "watching") {
-      html += '<div class="empty">아직 좌석이 없어요. 아래 ' + (leg.max_rank ? "상위 " + leg.max_rank + "개 " : "") + '경로의 취소표를 지켜보다가 나오는 즉시 예매해요.</div>';
+      // 좌석이 없을 때의 안내 문구는 두지 않습니다 (후보 카드가 바로 이어집니다).
     } else if (leg.error) {
       html += '<div class="empty">' + esc(leg.error) + "</div>";
     }
-    if (cond.length) html += '<div class="note">조건: ' + esc(cond.join(" · ")) + (leg.route ? "<br>경로: " + esc(leg.route) : "") + "</div>";
+    if (cond.length) html += '<div class="note">조건: ' + esc(cond.join(" · ")) + "</div>";
     if (leg.error && leg.holding) html += '<div class="note" style="color:var(--bad)">' + esc(leg.error) + "</div>";
     html += "</div>";
     if (leg.watching || !leg.holding) html += candidatesHtml(leg);
