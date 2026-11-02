@@ -74,13 +74,15 @@
   </section>
   <section id="finished"></section>
   <footer>
-    예약번호 · 승차권번호는 뒤 4자리만 표시합니다. 60초마다 자동 갱신.
+    예약번호 · 승차권번호는 뒤 4자리만 표시합니다. 90초마다 자동 갱신 (데이터는 감시 PC 가 올립니다).
     <span class="legend">표시: ● 보유 · ○ 좌석 있음 · ◐ 예약대기 가능 · ✖ 매진</span>
   </footer>
 </main>
 <script>
 (function () {
   "use strict";
+  // GitHub API 는 거의 바로 새 내용을 주고(비인증 60회/시간), raw CDN 은 최대 5분 캐시라 API 를 먼저 시도하고 실패하면 raw 로 받습니다.
+  var API_URL = "https://api.github.com/repos/JIsseokOh/korail-status/contents/status.json?ref=data";
   var DATA_URL = "https://raw.githubusercontent.com/JIsseokOh/korail-status/data/status.json";
   var JOB_KO = { starting: "시작 중", running: "감시 중", done: "완료", partial: "부분 성공", failed: "실패", stopped: "중지됨", lost: "프로세스 없음" };
   var LEG_KO = { pending: "대기", reserved: "예약됨", paid: "결제완료", waiting: "예약대기", watching: "좌석 감시 중", available: "좌석 있음", expired: "만료", failed: "실패", stopped: "중지됨" };
@@ -192,14 +194,17 @@
       (stale ? ' <span class="stale">· 갱신이 멈춰 있습니다. 감시 PC 가 꺼졌는지 확인하세요</span>' : "") + ' · 감시 중 ' + running.length + "건";
   }
 
+  function fetchJson(url, options) {
+    return fetch(url, options).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+  }
   function load() {
-    fetch(DATA_URL + "?t=" + Date.now(), { cache: "no-store" })
-      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+    fetchJson(API_URL, { headers: { Accept: "application/vnd.github.raw" }, cache: "no-store" })
+      .catch(function () { return fetchJson(DATA_URL + "?t=" + Date.now(), { cache: "no-store" }); })
       .then(render)
       .catch(function (e) { document.getElementById("meta").innerHTML = '<span class="stale">데이터를 불러오지 못했습니다 (' + esc(e.message) + ")</span>"; });
   }
   load();
-  setInterval(load, 60000);
+  setInterval(load, 90000);
 })();
 </script>
 </body>
