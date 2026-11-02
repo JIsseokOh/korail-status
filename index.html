@@ -140,7 +140,7 @@
     if (w.latest) cond.push(w.latest + " 까지 출발");
     if (w.arrive_by) cond.push(hm(w.arrive_by) + " 까지 도착");
     var head = '<h2>' + esc(leg.label) + " · " + esc(mmdd(leg.date)) + " · " + esc(leg.route || (leg.dep + "→" + leg.arr)) + " " + badge(leg.status, LEG_KO) +
-      (leg.watching ? badge("watching", LEG_KO) : "") + "</h2>";
+      (leg.watching && leg.holding ? '<span class="badge run">상위 순위 감시 중</span>' : "") + "</h2>";
     var kv = '<dl class="kv"><dt>시간 조건</dt><dd>' + esc(cond.join(" · ") || "-") + (leg.route && leg.route.indexOf("+") >= 0 ? ' <span class="sub">(출발지·목적지 기준, 역 이동시간 반영)</span>' : "") + "</dd>" +
       (leg.until && leg.watching ? "<dt>감시 종료 예정</dt><dd>" + esc(mdhm(leg.until)) + "</dd>" : "") +
       "<dt>후보</dt><dd>" + (leg.candidate_total || 0) + "편" + (leg.dropped && leg.dropped.rule ? " (고속선 규칙 제외 " + leg.dropped.rule + "편)" : "") + "</dd></dl>";
