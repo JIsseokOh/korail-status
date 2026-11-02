@@ -1,0 +1,751 @@
+{
+ "generated_at": "2026-11-03T02:23:49+09:00",
+ "version": "1.6.3",
+ "site_url": "https://jisseokoh.github.io/korail-status/",
+ "jobs": [
+  {
+   "job_id": "20261102-183250-d8ea",
+   "status": "done",
+   "started_at": "2026-11-02T18:32:50+09:00",
+   "finished_at": "2026-11-03T02:23:49+09:00",
+   "updated_at": "2026-11-03T02:23:49+09:00",
+   "interval": 30,
+   "checks": 656,
+   "next_check_at": "2026-11-03T02:23:37+09:00",
+   "error": null,
+   "command": "book --from 동탄+46,수서+96,서울+122,수원+62 --to 물금+22,부산+88,울산(통도사)+92 --date 2026-11-13 --time 10:00 --arrive-by 18:00 --watch --transfer-probes 2 --rank-list 10",
+   "legs": [
+    {
+     "label": "편도",
+     "status": "paid",
+     "watching": false,
+     "dep": "동탄",
+     "arr": "물금",
+     "date": "20261113",
+     "pairs": [
+      [
+       "동탄",
+       "물금"
+      ],
+      [
+       "동탄",
+       "부산"
+      ],
+      [
+       "동탄",
+       "울산(통도사)"
+      ],
+      [
+       "수서",
+       "물금"
+      ],
+      [
+       "수서",
+       "부산"
+      ],
+      [
+       "수서",
+       "울산(통도사)"
+      ],
+      [
+       "서울",
+       "물금"
+      ],
+      [
+       "서울",
+       "부산"
+      ],
+      [
+       "서울",
+       "울산(통도사)"
+      ],
+      [
+       "수원",
+       "물금"
+      ],
+      [
+       "수원",
+       "부산"
+      ],
+      [
+       "수원",
+       "울산(통도사)"
+      ]
+     ],
+     "route": "동탄(+46분)·수서(+96분)·서울(+122분)·수원(+62분)→물금(+22분)·부산(+88분)·울산(통도사)(+92분)",
+     "window": {
+      "after": "2026-11-13T10:00:00+09:00",
+      "latest": null,
+      "arrive_by": "2026-11-13T18:00:00+09:00"
+     },
+     "until": "2026-11-13T18:00:00+09:00",
+     "error": null,
+     "holding": {
+      "pnr": "****4776",
+      "rank": 1,
+      "paid": true,
+      "is_waiting": false,
+      "price": 38500,
+      "buy_limit": "2026-11-03T02:33:42+09:00",
+      "acquired_at": "2026-11-03T02:23:45+09:00",
+      "label": "4시간 4분 [역까지 46분 + 열차 2시간 56분 + 역에서 22분]  11/13 KTX-산천 331 동탄 13:47→동대구 15:17 ⇄ ITX-마음 1145 동대구 15:45→물금 16:43 (환승 동대구 28분)",
+      "reservations": [
+       {
+        "pnr": "****4776",
+        "train": {
+         "train_no": "331",
+         "train_type": "KTX-산천",
+         "dep": "동탄",
+         "arr": "동대구",
+         "dep_date": "20261113",
+         "dep_time": "13:47",
+         "arr_date": "20261113",
+         "arr_time": "15:17",
+         "duration": "1시간 30분",
+         "special_seat": false,
+         "general_seat": false,
+         "waiting_list": false
+        },
+        "price": 38500,
+        "seat_count": 1,
+        "is_waiting": false,
+        "buy_limit": "2026-11-03T02:33:42+09:00",
+        "seats": [
+         {
+          "car": "5",
+          "seat": "8A",
+          "class": "일반실",
+          "passenger": "어른",
+          "price": 30200
+         }
+        ]
+       },
+       {
+        "pnr": "****4776",
+        "train": {
+         "train_no": "1145",
+         "train_type": "ITX-마음",
+         "dep": "동대구",
+         "arr": "물금",
+         "dep_date": "20261113",
+         "dep_time": "15:45",
+         "arr_date": "20261113",
+         "arr_time": "16:43",
+         "duration": "58분",
+         "special_seat": false,
+         "general_seat": false,
+         "waiting_list": false
+        },
+        "price": 38500,
+        "seat_count": 1,
+        "is_waiting": false,
+        "buy_limit": "2026-11-03T02:33:42+09:00",
+        "seats": [
+         {
+          "car": "2",
+          "seat": "10A",
+          "class": "일반실",
+          "passenger": "어른",
+          "price": 8300
+         }
+        ]
+       }
+      ],
+      "tickets": [
+       {
+        "ticket_no": "****1-28",
+        "pnr": "****4776",
+        "train": {
+         "train_no": "331",
+         "train_type": "KTX-산천",
+         "dep": "동탄",
+         "arr": "동대구",
+         "dep_date": "20261113",
+         "dep_time": "13:47",
+         "arr_date": "20261113",
+         "arr_time": "15:17",
+         "duration": "1시간 30분",
+         "special_seat": false,
+         "general_seat": false,
+         "waiting_list": false
+        },
+        "car": "5",
+        "seat": "8A",
+        "price": 38500
+       },
+       {
+        "ticket_no": "****1-28",
+        "pnr": "****4776",
+        "train": {
+         "train_no": "1145",
+         "train_type": "ITX-마음",
+         "dep": "동대구",
+         "arr": "물금",
+         "dep_date": "20261113",
+         "dep_time": "15:45",
+         "arr_date": "20261113",
+         "arr_time": "16:43",
+         "duration": "58분",
+         "special_seat": false,
+         "general_seat": false,
+         "waiting_list": false
+        },
+        "car": "2",
+        "seat": "8A",
+        "price": 38500
+       }
+      ],
+      "kind": "transfer",
+      "legs": [
+       {
+        "train_no": "331",
+        "train_type": "KTX-산천",
+        "dep": "동탄",
+        "arr": "동대구",
+        "dep_date": "20261113",
+        "dep_time": "13:47",
+        "arr_date": "20261113",
+        "arr_time": "15:17",
+        "duration": "1시간 30분",
+        "special_seat": false,
+        "general_seat": true,
+        "waiting_list": false
+       },
+       {
+        "train_no": "1145",
+        "train_type": "ITX-마음",
+        "dep": "동대구",
+        "arr": "물금",
+        "dep_date": "20261113",
+        "dep_time": "15:45",
+        "arr_date": "20261113",
+        "arr_time": "16:43",
+        "duration": "58분",
+        "special_seat": false,
+        "general_seat": true,
+        "waiting_list": false
+       }
+      ],
+      "departure": "2026-11-13T13:47:00+09:00",
+      "arrival": "2026-11-13T16:43:00+09:00",
+      "duration_min": 176,
+      "access_min": 46,
+      "egress_min": 22,
+      "total_min": 244,
+      "transfer_station": "동대구",
+      "transfer_wait_min": 28,
+      "rule_ok": true,
+      "rule_note": "규칙 끔"
+     },
+     "held_rank": 1,
+     "max_rank": 5,
+     "best_rank": 1,
+     "candidate_total": 95,
+     "dropped": {
+      "rule": 0,
+      "type": 0,
+      "wait": 0,
+      "window": 129,
+      "invalid": 2
+     },
+     "candidates": [
+      {
+       "rank": 1,
+       "score": 244.0,
+       "available": true,
+       "waiting": false,
+       "held": true,
+       "kind": "transfer",
+       "legs": [
+        {
+         "train_no": "331",
+         "train_type": "KTX-산천",
+         "dep": "동탄",
+         "arr": "동대구",
+         "dep_date": "20261113",
+         "dep_time": "13:47",
+         "arr_date": "20261113",
+         "arr_time": "15:17",
+         "duration": "1시간 30분",
+         "special_seat": false,
+         "general_seat": true,
+         "waiting_list": false
+        },
+        {
+         "train_no": "1145",
+         "train_type": "ITX-마음",
+         "dep": "동대구",
+         "arr": "물금",
+         "dep_date": "20261113",
+         "dep_time": "15:45",
+         "arr_date": "20261113",
+         "arr_time": "16:43",
+         "duration": "58분",
+         "special_seat": false,
+         "general_seat": true,
+         "waiting_list": false
+        }
+       ],
+       "departure": "2026-11-13T13:47:00+09:00",
+       "arrival": "2026-11-13T16:43:00+09:00",
+       "duration_min": 176,
+       "access_min": 46,
+       "egress_min": 22,
+       "total_min": 244,
+       "transfer_station": "동대구",
+       "transfer_wait_min": 28,
+       "rule_ok": true,
+       "rule_note": "규칙 끔"
+      },
+      {
+       "rank": 2,
+       "score": 248.0,
+       "available": false,
+       "waiting": false,
+       "held": false,
+       "kind": "transfer",
+       "legs": [
+        {
+         "train_no": "327",
+         "train_type": "KTX-산천",
+         "dep": "동탄",
+         "arr": "동대구",
+         "dep_date": "20261113",
+         "dep_time": "13:08",
+         "arr_date": "20261113",
+         "arr_time": "14:33",
+         "duration": "1시간 25분",
+         "special_seat": false,
+         "general_seat": false,
+         "waiting_list": false
+        },
+        {
+         "train_no": "105",
+         "train_type": "KTX",
+         "dep": "동대구",
+         "arr": "물금",
+         "dep_date": "20261113",
+         "dep_time": "15:17",
+         "arr_date": "20261113",
+         "arr_time": "16:08",
+         "duration": "51분",
+         "special_seat": true,
+         "general_seat": true,
+         "waiting_list": false
+        }
+       ],
+       "departure": "2026-11-13T13:08:00+09:00",
+       "arrival": "2026-11-13T16:08:00+09:00",
+       "duration_min": 180,
+       "access_min": 46,
+       "egress_min": 22,
+       "total_min": 248,
+       "transfer_station": "동대구",
+       "transfer_wait_min": 44,
+       "rule_ok": true,
+       "rule_note": "규칙 끔"
+      },
+      {
+       "rank": 3,
+       "score": 254.0,
+       "available": true,
+       "waiting": false,
+       "held": false,
+       "kind": "direct",
+       "legs": [
+        {
+         "train_no": "331",
+         "train_type": "KTX-산천",
+         "dep": "동탄",
+         "arr": "울산(통도사)",
+         "dep_date": "20261113",
+         "dep_time": "13:47",
+         "arr_date": "20261113",
+         "arr_time": "15:43",
+         "duration": "1시간 56분",
+         "special_seat": false,
+         "general_seat": true,
+         "waiting_list": false
+        }
+       ],
+       "departure": "2026-11-13T13:47:00+09:00",
+       "arrival": "2026-11-13T15:43:00+09:00",
+       "duration_min": 116,
+       "access_min": 46,
+       "egress_min": 92,
+       "total_min": 254,
+       "transfer_station": null,
+       "transfer_wait_min": 0,
+       "rule_ok": true,
+       "rule_note": "규칙 끔"
+      },
+      {
+       "rank": 4,
+       "score": 261.0,
+       "available": false,
+       "waiting": false,
+       "held": false,
+       "kind": "transfer",
+       "legs": [
+        {
+         "train_no": "4021",
+         "train_type": "KTX",
+         "dep": "동탄",
+         "arr": "대전",
+         "dep_date": "20261113",
+         "dep_time": "10:48",
+         "arr_date": "20261113",
+         "arr_time": "11:29",
+         "duration": "41분",
+         "special_seat": false,
+         "general_seat": false,
+         "waiting_list": false
+        },
+        {
+         "train_no": "027",
+         "train_type": "KTX",
+         "dep": "대전",
+         "arr": "울산(통도사)",
+         "dep_date": "20261113",
+         "dep_time": "11:39",
+         "arr_date": "20261113",
+         "arr_time": "12:51",
+         "duration": "1시간 12분",
+         "special_seat": true,
+         "general_seat": true,
+         "waiting_list": false
+        }
+       ],
+       "departure": "2026-11-13T10:48:00+09:00",
+       "arrival": "2026-11-13T12:51:00+09:00",
+       "duration_min": 123,
+       "access_min": 46,
+       "egress_min": 92,
+       "total_min": 261,
+       "transfer_station": "대전",
+       "transfer_wait_min": 10,
+       "rule_ok": true,
+       "rule_note": "규칙 끔"
+      },
+      {
+       "rank": 5,
+       "score": 262.0,
+       "available": true,
+       "waiting": false,
+       "held": false,
+       "kind": "direct",
+       "legs": [
+        {
+         "train_no": "327",
+         "train_type": "KTX-산천",
+         "dep": "동탄",
+         "arr": "부산",
+         "dep_date": "20261113",
+         "dep_time": "13:08",
+         "arr_date": "20261113",
+         "arr_time": "15:16",
+         "duration": "2시간 8분",
+         "special_seat": false,
+         "general_seat": true,
+         "waiting_list": false
+        }
+       ],
+       "departure": "2026-11-13T13:08:00+09:00",
+       "arrival": "2026-11-13T15:16:00+09:00",
+       "duration_min": 128,
+       "access_min": 46,
+       "egress_min": 88,
+       "total_min": 262,
+       "transfer_station": null,
+       "transfer_wait_min": 0,
+       "rule_ok": true,
+       "rule_note": "규칙 끔"
+      },
+      {
+       "rank": 6,
+       "score": 265.0,
+       "available": true,
+       "waiting": false,
+       "held": false,
+       "kind": "transfer",
+       "legs": [
+        {
+         "train_no": "331",
+         "train_type": "KTX-산천",
+         "dep": "동탄",
+         "arr": "동대구",
+         "dep_date": "20261113",
+         "dep_time": "13:47",
+         "arr_date": "20261113",
+         "arr_time": "15:17",
+         "duration": "1시간 30분",
+         "special_seat": false,
+         "general_seat": true,
+         "waiting_list": false
+        },
+        {
+         "train_no": "1015",
+         "train_type": "ITX-마음",
+         "dep": "동대구",
+         "arr": "물금",
+         "dep_date": "20261113",
+         "dep_time": "16:07",
+         "arr_date": "20261113",
+         "arr_time": "17:04",
+         "duration": "57분",
+         "special_seat": false,
+         "general_seat": true,
+         "waiting_list": false
+        }
+       ],
+       "departure": "2026-11-13T13:47:00+09:00",
+       "arrival": "2026-11-13T17:04:00+09:00",
+       "duration_min": 197,
+       "access_min": 46,
+       "egress_min": 22,
+       "total_min": 265,
+       "transfer_station": "동대구",
+       "transfer_wait_min": 50,
+       "rule_ok": true,
+       "rule_note": "규칙 끔"
+      },
+      {
+       "rank": 7,
+       "score": 266.0,
+       "available": false,
+       "waiting": false,
+       "held": false,
+       "kind": "transfer",
+       "legs": [
+        {
+         "train_no": "327",
+         "train_type": "KTX-산천",
+         "dep": "동탄",
+         "arr": "대전",
+         "dep_date": "20261113",
+         "dep_time": "13:08",
+         "arr_date": "20261113",
+         "arr_time": "13:42",
+         "duration": "34분",
+         "special_seat": false,
+         "general_seat": false,
+         "waiting_list": false
+        },
+        {
+         "train_no": "329",
+         "train_type": "KTX-산천",
+         "dep": "대전",
+         "arr": "울산(통도사)",
+         "dep_date": "20261113",
+         "dep_time": "13:58",
+         "arr_date": "20261113",
+         "arr_time": "15:16",
+         "duration": "1시간 18분",
+         "special_seat": false,
+         "general_seat": true,
+         "waiting_list": false
+        }
+       ],
+       "departure": "2026-11-13T13:08:00+09:00",
+       "arrival": "2026-11-13T15:16:00+09:00",
+       "duration_min": 128,
+       "access_min": 46,
+       "egress_min": 92,
+       "total_min": 266,
+       "transfer_station": "대전",
+       "transfer_wait_min": 16,
+       "rule_ok": true,
+       "rule_note": "규칙 끔"
+      },
+      {
+       "rank": 8,
+       "score": 267.0,
+       "available": false,
+       "waiting": false,
+       "held": false,
+       "kind": "direct",
+       "legs": [
+        {
+         "train_no": "4021",
+         "train_type": "KTX",
+         "dep": "동탄",
+         "arr": "부산",
+         "dep_date": "20261113",
+         "dep_time": "10:48",
+         "arr_date": "20261113",
+         "arr_time": "13:01",
+         "duration": "2시간 13분",
+         "special_seat": false,
+         "general_seat": false,
+         "waiting_list": true
+        }
+       ],
+       "departure": "2026-11-13T10:48:00+09:00",
+       "arrival": "2026-11-13T13:01:00+09:00",
+       "duration_min": 133,
+       "access_min": 46,
+       "egress_min": 88,
+       "total_min": 267,
+       "transfer_station": null,
+       "transfer_wait_min": 0,
+       "rule_ok": true,
+       "rule_note": "규칙 끔"
+      },
+      {
+       "rank": 9,
+       "score": 272.0,
+       "available": false,
+       "waiting": false,
+       "held": false,
+       "kind": "transfer",
+       "legs": [
+        {
+         "train_no": "383",
+         "train_type": "KTX-산천",
+         "dep": "동탄",
+         "arr": "대전",
+         "dep_date": "20261113",
+         "dep_time": "12:21",
+         "arr_date": "20261113",
+         "arr_time": "13:07",
+         "duration": "46분",
+         "special_seat": false,
+         "general_seat": false,
+         "waiting_list": false
+        },
+        {
+         "train_no": "033",
+         "train_type": "KTX-산천",
+         "dep": "대전",
+         "arr": "울산(통도사)",
+         "dep_date": "20261113",
+         "dep_time": "13:23",
+         "arr_date": "20261113",
+         "arr_time": "14:35",
+         "duration": "1시간 12분",
+         "special_seat": false,
+         "general_seat": true,
+         "waiting_list": false
+        }
+       ],
+       "departure": "2026-11-13T12:21:00+09:00",
+       "arrival": "2026-11-13T14:35:00+09:00",
+       "duration_min": 134,
+       "access_min": 46,
+       "egress_min": 92,
+       "total_min": 272,
+       "transfer_station": "대전",
+       "transfer_wait_min": 16,
+       "rule_ok": true,
+       "rule_note": "규칙 끔"
+      },
+      {
+       "rank": 10,
+       "score": 273.0,
+       "available": false,
+       "waiting": false,
+       "held": false,
+       "kind": "transfer",
+       "legs": [
+        {
+         "train_no": "4021",
+         "train_type": "KTX",
+         "dep": "동탄",
+         "arr": "대전",
+         "dep_date": "20261113",
+         "dep_time": "10:48",
+         "arr_date": "20261113",
+         "arr_time": "11:29",
+         "duration": "41분",
+         "special_seat": false,
+         "general_seat": false,
+         "waiting_list": false
+        },
+        {
+         "train_no": "323",
+         "train_type": "KTX-산천",
+         "dep": "대전",
+         "arr": "울산(통도사)",
+         "dep_date": "20261113",
+         "dep_time": "11:49",
+         "arr_date": "20261113",
+         "arr_time": "13:03",
+         "duration": "1시간 14분",
+         "special_seat": true,
+         "general_seat": true,
+         "waiting_list": false
+        }
+       ],
+       "departure": "2026-11-13T10:48:00+09:00",
+       "arrival": "2026-11-13T13:03:00+09:00",
+       "duration_min": 135,
+       "access_min": 46,
+       "egress_min": 92,
+       "total_min": 273,
+       "transfer_station": "대전",
+       "transfer_wait_min": 20,
+       "rule_ok": true,
+       "rule_note": "규칙 끔"
+      }
+     ],
+     "history": [
+      {
+       "at": "2026-11-03T02:23:45+09:00",
+       "action": "reserve",
+       "rank": 1,
+       "pnr": "****4776",
+       "note": "1순위 확보: 4시간 4분 [역까지 46분 + 열차 2시간 56분 + 역에서 22분]  11/13 KTX-산천 331 동탄 13:47→동대구 15:17 ⇄ ITX-마음 1145 동대구 15:45→물금 16:43 (환승 동대구 28분)"
+      }
+     ],
+     "orphans": [],
+     "paid": true
+    }
+   ]
+  }
+ ],
+ "tickets": [
+  {
+   "ticket_no": "****1-28",
+   "pnr": "****4776",
+   "train": {
+    "train_no": "331",
+    "train_type": "KTX-산천",
+    "dep": "동탄",
+    "arr": "동대구",
+    "dep_date": "20261113",
+    "dep_time": "13:47",
+    "arr_date": "20261113",
+    "arr_time": "15:17",
+    "duration": "1시간 30분",
+    "special_seat": false,
+    "general_seat": false,
+    "waiting_list": false
+   },
+   "car": "5",
+   "seat": "8A",
+   "price": 38500
+  },
+  {
+   "ticket_no": "****1-28",
+   "pnr": "****4776",
+   "train": {
+    "train_no": "1145",
+    "train_type": "ITX-마음",
+    "dep": "동대구",
+    "arr": "물금",
+    "dep_date": "20261113",
+    "dep_time": "15:45",
+    "arr_date": "20261113",
+    "arr_time": "16:43",
+    "duration": "58분",
+    "special_seat": false,
+    "general_seat": false,
+    "waiting_list": false
+   },
+   "car": "2",
+   "seat": "8A",
+   "price": 38500
+  }
+ ],
+ "tickets_at": "2026-11-03T02:23:49+09:00"
+}
