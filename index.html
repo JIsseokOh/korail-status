@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>열차 예매 현황</title>
+<meta name="description" content="감시 중인 여정, 후보 순위, 보유 승차권을 보여 주는 현황판">
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --text: #1d2430; --muted: #5f6b7a; --line: #e3e7ec;
+    --accent: #1f5fbf; --ok: #1e8e3e; --warn: #c77700; --bad: #c0392b; --hold: #6c3ebf; --soft: #eef3fb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11151c; --card: #1a2029; --text: #e6e9ee; --muted: #9aa5b4; --line: #2b3440;
+      --accent: #7fb0ff; --ok: #5fcf7a; --warn: #f0b24a; --bad: #ff7b6b; --hold: #b79cff; --soft: #202a38;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11151c; --card: #1a2029; --text: #e6e9ee; --muted: #9aa5b4; --line: #2b3440;
+    --accent: #7fb0ff; --ok: #5fcf7a; --warn: #f0b24a; --bad: #ff7b6b; --hold: #b79cff; --soft: #202a38;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 -apple-system, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", Roboto, sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 20px 16px 48px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; margin-bottom: 16px; }
+  h1 { font-size: 22px; margin: 0; }
+  .meta { color: var(--muted); font-size: 13px; }
+  .stale { color: var(--bad); font-weight: 600; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .card h2 { font-size: 17px; margin: 0 0 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+  .badge.run { color: var(--accent); border-color: var(--accent); }
+  .badge.ok { color: var(--ok); border-color: var(--ok); }
+  .badge.warn { color: var(--warn); border-color: var(--warn); }
+  .badge.bad { color: var(--bad); border-color: var(--bad); }
+  .badge.hold { color: var(--hold); border-color: var(--hold); }
+  .kv { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; font-size: 14px; margin: 8px 0; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; }
+  .holding { background: var(--soft); border-radius: 10px; padding: 12px; margin: 10px 0; }
+  .holding .title { font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: left; padding: 6px 8px; border-top: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; border-top: none; }
+  tr.held td { background: var(--soft); font-weight: 600; }
+  td.rank { white-space: nowrap; }
+  .mark { display: inline-block; width: 1.3em; }
+  .mark.o { color: var(--ok); } .mark.x { color: var(--bad); } .mark.h { color: var(--hold); } .mark.w { color: var(--warn); }
+  .legs { color: var(--text); }
+  .sub { color: var(--muted); font-size: 12.5px; }
+  details summary { cursor: pointer; color: var(--accent); font-size: 13.5px; margin: 6px 0; }
+  .history { font-size: 13px; color: var(--muted); margin: 8px 0 0; padding-left: 18px; }
+  .legend { font-size: 12.5px; color: var(--muted); }
+  .empty { color: var(--muted); padding: 8px 0; }
+  .error { color: var(--bad); font-size: 13.5px; margin-top: 6px; }
+  footer { color: var(--muted); font-size: 12.5px; margin-top: 24px; }
+  @media (max-width: 640px) {
+    th:nth-child(3), td:nth-child(3) { display: none; } /* 구간 상세는 좁은 화면에서 접음 */
+    .kv { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>열차 예매 현황</h1>
+    <span class="meta" id="meta">불러오는 중…</span>
+  </header>
+  <section id="running"></section>
+  <section class="card" id="tickets-card">
+    <h2>보유 승차권</h2>
+    <div id="tickets"></div>
+  </section>
+  <section id="finished"></section>
+  <footer>
+    예약번호 · 승차권번호는 뒤 4자리만 표시합니다. 60초마다 자동 갱신.
+    <span class="legend">표시: ● 보유 · ○ 좌석 있음 · ◐ 예약대기 가능 · ✖ 매진</span>
+  </footer>
+</main>
+<script>
+(function () {
+  "use strict";
+  var DATA_URL = "https://raw.githubusercontent.com/JIsseokOh/korail-status/data/status.json";
+  var JOB_KO = { starting: "시작 중", running: "감시 중", done: "완료", partial: "부분 성공", failed: "실패", stopped: "중지됨", lost: "프로세스 없음" };
+  var LEG_KO = { pending: "대기", reserved: "예약됨", paid: "결제완료", waiting: "예약대기", watching: "좌석 감시 중", available: "좌석 있음", expired: "만료", failed: "실패", stopped: "중지됨" };
+
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]; }); }
+  function minutes(m) { if (m == null) return "?"; m = Math.round(m); var h = Math.floor(m / 60), r = m % 60; return h && r ? h + "시간 " + r + "분" : h ? h + "시간" : r + "분"; }
+  function mmdd(d) { return d && d.length >= 8 ? (+d.slice(4, 6)) + "/" + (+d.slice(6, 8)) : (d || ""); }
+  function hm(iso) { return iso ? iso.slice(11, 16) : ""; }
+  function mdhm(iso) { return iso ? (+iso.slice(5, 7)) + "/" + (+iso.slice(8, 10)) + " " + iso.slice(11, 16) : ""; }
+  function ago(iso) {
+    if (!iso) return "";
+    var diff = (Date.now() - new Date(iso).getTime()) / 60000;
+    if (diff < 1) return "방금";
+    if (diff < 60) return Math.round(diff) + "분 전";
+    if (diff < 1440) return Math.round(diff / 60) + "시간 전";
+    return Math.round(diff / 1440) + "일 전";
+  }
+  function badge(status, map) {
+    var cls = status === "running" || status === "starting" || status === "watching" ? "run" :
+      status === "done" || status === "paid" ? "ok" :
+      status === "reserved" || status === "waiting" || status === "partial" || status === "available" ? "warn" :
+      status === "failed" || status === "lost" || status === "expired" ? "bad" : "";
+    return '<span class="badge ' + cls + '">' + esc((map || JOB_KO)[status] || status) + "</span>";
+  }
+  function legsText(legs) {
+    return (legs || []).map(function (t) { return esc(t.train_type + " " + t.train_no + " " + t.dep + " " + t.dep_time + "→" + t.arr + " " + t.arr_time); }).join(" ⇄ ");
+  }
+  function itinText(it) {
+    var head = minutes(it.duration_min);
+    if (it.access_min || it.egress_min) head = minutes(it.total_min) + ' <span class="sub">[역까지 ' + it.access_min + "분 + 열차 " + minutes(it.duration_min) + " + 역에서 " + it.egress_min + "분]</span>";
+    var extra = it.transfer_station ? ' <span class="sub">(환승 ' + esc(it.transfer_station) + " " + it.transfer_wait_min + "분)</span>" : "";
+    return { head: head, body: legsText(it.legs) + extra };
+  }
+  function mark(c) { return c.held ? '<span class="mark h">●</span>' : c.available ? '<span class="mark o">○</span>' : c.waiting ? '<span class="mark w">◐</span>' : '<span class="mark x">✖</span>'; }
+
+  function renderHolding(h, rank) {
+    if (!h) return "";
+    var it = itinText(h);
+    var state = h.paid ? badge("paid", LEG_KO) : h.is_waiting ? badge("waiting", LEG_KO) : badge("reserved", LEG_KO);
+    var seats = [];
+    (h.reservations || []).forEach(function (r) {
+      (r.seats || []).forEach(function (s) { seats.push(esc(r.train.train_type + " " + r.train.train_no + ": " + (s.car ? s.car + "호차 " + s.seat : "예약대기") + " (" + s.class + ")")); });
+    });
+    if (!seats.length) (h.tickets || []).forEach(function (t) { seats.push(esc(t.train.train_type + " " + t.train.train_no + ": " + t.car + "호차 " + t.seat)); });
+    var limit = !h.paid && h.buy_limit ? '<div class="sub">결제기한 ' + esc(mdhm(h.buy_limit)) + "</div>" : "";
+    return '<div class="holding"><div class="title">' + (rank ? rank + "순위 보유 " : "보유 ") + state + "</div>" +
+      "<div>" + it.head + " · " + mmdd(h.legs && h.legs[0] && h.legs[0].dep_date) + " " + it.body + "</div>" +
+      '<div class="sub">' + seats.join(" · ") + (seats.length ? " · " : "") + (h.price || 0).toLocaleString("ko-KR") + "원 · 예약번호 " + esc(h.pnr) + "</div>" + limit + "</div>";
+  }
+
+  function renderLeg(leg) {
+    var w = leg.window || {};
+    var cond = [];
+    if (w.after) cond.push(hm(w.after) + " 이후 출발");
+    if (w.latest) cond.push(w.latest + " 까지 출발");
+    if (w.arrive_by) cond.push(hm(w.arrive_by) + " 까지 도착");
+    var head = '<h2>' + esc(leg.label) + " · " + esc(mmdd(leg.date)) + " · " + esc(leg.route || (leg.dep + "→" + leg.arr)) + " " + badge(leg.status, LEG_KO) +
+      (leg.watching ? badge("watching", LEG_KO) : "") + "</h2>";
+    var kv = '<dl class="kv"><dt>시간 조건</dt><dd>' + esc(cond.join(" · ") || "-") + (leg.route && leg.route.indexOf("+") >= 0 ? ' <span class="sub">(출발지·목적지 기준, 역 이동시간 반영)</span>' : "") + "</dd>" +
+      (leg.until && leg.watching ? "<dt>감시 종료 예정</dt><dd>" + esc(mdhm(leg.until)) + "</dd>" : "") +
+      "<dt>후보</dt><dd>" + (leg.candidate_total || 0) + "편" + (leg.dropped && leg.dropped.rule ? " (고속선 규칙 제외 " + leg.dropped.rule + "편)" : "") + "</dd></dl>";
+    var rows = (leg.candidates || []).map(function (c) {
+      var it = itinText(c);
+      return '<tr class="' + (c.held ? "held" : "") + '"><td class="rank">' + c.rank + ". " + mark(c) + "</td><td>" + it.head + "</td><td class=\"legs\">" + it.body + "</td></tr>";
+    }).join("");
+    var table = rows ? '<table><thead><tr><th>순위</th><th>총 소요</th><th>여정</th></tr></thead><tbody>' + rows + "</tbody></table>" : '<div class="empty">후보 없음</div>';
+    var hist = (leg.history || []).slice(-5).reverse().map(function (x) { return "<li>" + esc(mdhm(x.at)) + " " + esc(x.note || x.action) + (x.fee != null ? " (수수료 " + x.fee.toLocaleString("ko-KR") + "원)" : "") + "</li>"; }).join("");
+    return head + kv + renderHolding(leg.holding, leg.held_rank) +
+      (leg.error ? '<div class="error">! ' + esc(leg.error) + "</div>" : "") +
+      "<details" + ((leg.watching || leg.status === "watching") ? " open" : "") + "><summary>후보 순위 보기</summary>" + table + "</details>" +
+      (hist ? '<ul class="history">' + hist + "</ul>" : "");
+  }
+
+  function renderJob(job, collapsed) {
+    var body = (job.legs || []).map(renderLeg).join("");
+    var info = '<div class="sub">작업 ' + esc(job.job_id) + " · 시작 " + esc(mdhm(job.started_at)) +
+      (job.finished_at ? " · 종료 " + esc(mdhm(job.finished_at)) : "") +
+      (job.status === "running" ? " · 조회 " + job.checks + "회" + (job.next_check_at ? " · 다음 조회 " + esc(hm(job.next_check_at)) : "") : "") +
+      "</div>" + (job.error ? '<div class="error">! ' + esc(job.error) + "</div>" : "");
+    var header = '<div class="sub" style="margin-bottom:6px">' + badge(job.status) + " " + esc(job.command || "") + "</div>";
+    if (collapsed) return '<div class="card"><details><summary>' + badge(job.status) + " " + esc(job.command || job.job_id) + " · " + esc(mdhm(job.finished_at || job.updated_at)) + "</summary>" + body + info + "</details></div>";
+    return '<div class="card">' + header + body + info + "</div>";
+  }
+
+  function renderTickets(tickets, holdingTickets) {
+    var rows = {};
+    (tickets || []).forEach(function (t) { rows[t.pnr + "|" + t.train.train_no + "|" + t.train.dep_date] = t; });
+    holdingTickets.forEach(function (t) { var k = t.pnr + "|" + t.train.train_no + "|" + t.train.dep_date; if (!rows[k]) rows[k] = t; });
+    var list = Object.keys(rows).map(function (k) { return rows[k]; }).sort(function (a, b) { return (a.train.dep_date + a.train.dep_time).localeCompare(b.train.dep_date + b.train.dep_time); });
+    if (!list.length) return '<div class="empty">보유 승차권 없음</div>';
+    return '<table><thead><tr><th>날짜</th><th>열차</th><th>구간</th><th>좌석</th><th>금액</th><th>예약번호</th></tr></thead><tbody>' + list.map(function (t) {
+      return "<tr><td>" + esc(mmdd(t.train.dep_date)) + "</td><td>" + esc(t.train.train_type + " " + t.train.train_no) + "</td><td>" + esc(t.train.dep + " " + t.train.dep_time + " → " + t.train.arr + " " + t.train.arr_time) +
+        "</td><td>" + esc(t.car ? t.car + "호차 " + t.seat : (t.seat || "")) + "</td><td>" + (t.price || 0).toLocaleString("ko-KR") + "원</td><td>" + esc(t.pnr) + "</td></tr>";
+    }).join("") + "</tbody></table>";
+  }
+
+  function render(data) {
+    var running = data.jobs.filter(function (j) { return j.status === "running" || j.status === "starting"; });
+    var finished = data.jobs.filter(function (j) { return j.status !== "running" && j.status !== "starting"; });
+    document.getElementById("running").innerHTML = running.length ? running.map(function (j) { return renderJob(j, false); }).join("") :
+      '<div class="card"><h2>감시 중인 여정</h2><div class="empty">지금 감시 중인 작업이 없습니다.</div></div>';
+    var holdingTickets = [];
+    data.jobs.forEach(function (j) { (j.legs || []).forEach(function (l) { if (l.holding && l.holding.paid) (l.holding.tickets || []).forEach(function (t) { holdingTickets.push(t); }); }); });
+    document.getElementById("tickets").innerHTML = renderTickets(data.tickets, holdingTickets) +
+      (data.tickets_at ? '<div class="sub">승차권 목록 기준 ' + esc(mdhm(data.tickets_at)) + "</div>" : "");
+    document.getElementById("finished").innerHTML = finished.length ? '<div class="card"><h2>최근 종료된 작업</h2></div>'.replace("</h2></div>", "</h2>" + finished.map(function (j) { return renderJob(j, true); }).join("") + "</div>") : "";
+    var stale = (Date.now() - new Date(data.generated_at).getTime()) > 40 * 60000;
+    document.getElementById("meta").innerHTML = "데이터 " + esc(mdhm(data.generated_at)) + " (" + esc(ago(data.generated_at)) + ")" +
+      (stale ? ' <span class="stale">· 갱신이 멈춰 있습니다. 감시 PC 가 꺼졌는지 확인하세요</span>' : "") + ' · 감시 중 ' + running.length + "건";
+  }
+
+  function load() {
+    fetch(DATA_URL + "?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then(render)
+      .catch(function (e) { document.getElementById("meta").innerHTML = '<span class="stale">데이터를 불러오지 못했습니다 (' + esc(e.message) + ")</span>"; });
+  }
+  load();
+  setInterval(load, 60000);
+})();
+</script>
+</body>
+</html>
