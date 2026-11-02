@@ -45,18 +45,21 @@
   .pill.bad { background: var(--bad-soft); color: var(--bad); }
   .pill.muted { background: var(--line); color: var(--muted); }
   .date { font-size: 20px; font-weight: 700; margin: 2px 0 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-  .journey { display: flex; align-items: stretch; gap: 12px; }
-  .stop { min-width: 92px; }
+  .chain { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+  .seg { flex: 1 1 230px; min-width: 0; display: flex; align-items: stretch; gap: 10px; }
+  .stop { min-width: 72px; }
   .stop .time { font-size: 30px; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; }
+  .chain.multi .stop .time { font-size: 24px; }
   .stop .name { font-size: 15px; margin-top: 4px; }
   .stop .door { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
   .stop.arrive { text-align: right; margin-left: auto; }
-  .rail { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); font-size: 12.5px; padding-top: 10px; }
+  .rail { flex: 1; min-width: 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); font-size: 12.5px; padding-top: 10px; text-align: center; }
+  .xfer { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 12px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); font-size: 11.5px; line-height: 1.2; }
+  .xfer strong { color: var(--text); font-size: 13.5px; margin-top: 2px; }
   .rail .line { width: 100%; height: 2px; background: var(--line); position: relative; margin: 6px 0; }
   .rail .line::before, .rail .line::after { content: ""; position: absolute; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
   .rail .line::before { left: 0; } .rail .line::after { right: 0; }
-  .rail .train { font-weight: 500; color: var(--text); }
-  .transfer { margin: 8px 0 8px 12px; padding-left: 12px; border-left: 2px dashed var(--line); color: var(--muted); font-size: 13px; }
+  .rail .train { font-weight: 500; color: var(--text); white-space: nowrap; }
   .seat { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 14px; }
   .seat .muted { color: var(--muted); }
   .note { margin-top: 12px; font-size: 13.5px; color: var(--muted); line-height: 1.5; }
@@ -69,9 +72,11 @@
   .cand-head .cand-total { font-weight: 700; font-size: 17px; }
   .cand-head .pill { margin-left: auto; align-self: center; }
   .cand-card .stop .time { font-size: 22px; }
-  .cand-card .stop { min-width: 76px; }
+  .cand-card .chain.multi .stop .time { font-size: 19px; }
+  .cand-card .seg { flex-basis: 200px; }
+  .cand-card .stop { min-width: 64px; }
   .cand-card .rail { font-size: 12px; padding-top: 6px; }
-  .cand-card .transfer { font-size: 12.5px; margin-top: 6px; }
+  .cand-card .xfer { padding: 4px 9px; }
   .cand-sub { color: var(--muted); font-size: 12.5px; }
   details > summary { cursor: pointer; color: var(--accent); font-size: 14px; list-style: none; padding: 8px 0 2px; }
   details > summary::-webkit-details-marker { display: none; }
@@ -150,26 +155,28 @@
     return { text: leg.status || "", cls: "muted" };
   }
 
+  function diffMin(a, b) {
+    var p = a.split(":"), q = b.split(":");
+    var d = ((+q[0]) * 60 + (+q[1])) - ((+p[0]) * 60 + (+p[1]));
+    return d < 0 ? d + 1440 : d;
+  }
+  // 구간마다 작은 표 하나씩을 좌우로 이어 붙이고, 사이에 환승 대기 칩을 둡니다. 폭이 모자라면 다음 줄로 내려갑니다.
   function journeyHtml(it, options) {
     options = options || {};
     var legs = it.legs || [];
     if (!legs.length) return "";
-    var first = legs[0], last = legs[legs.length - 1];
-    var depDoor = it.access_min ? '<div class="door">집에서 ' + it.access_min + "분 잡으면 " + esc(addMinutes(first.dep_time, -it.access_min)) + " 출발</div>" : "";
-    var arrDoor = it.egress_min ? '<div class="door">역에서 목적지까지 ' + it.egress_min + "분</div>" : "";
-    if (options.doors === false) { depDoor = ""; arrDoor = ""; }
-    var trainLabel = legs.length === 1 ? esc(first.train_type + " " + first.train_no) : esc(legs.map(function (l) { return l.train_type + " " + l.train_no; }).join(" → "));
-    var html = '<div class="journey">' +
-      '<div class="stop"><div class="time">' + esc(first.dep_time) + '</div><div class="name">' + esc(first.dep) + "</div>" + depDoor + "</div>" +
-      '<div class="rail"><div class="train">' + trainLabel + '</div><div class="line"></div><div>' + minutes(it.duration_min) + (it.transfer_station ? " · 환승 1회" : " · 직통") + "</div></div>" +
-      '<div class="stop arrive"><div class="time">' + esc(last.arr_time) + '</div><div class="name">' + esc(last.arr) + "</div>" + arrDoor + "</div>" +
-      "</div>";
-    if (legs.length > 1) {
-      html += '<div class="transfer">' + legs.map(function (l, i) {
-        var wait = i < legs.length - 1 ? " · 환승 대기 " + it.transfer_wait_min + "분" : "";
-        return esc(l.train_type + " " + l.train_no + " " + l.dep + " " + l.dep_time + " → " + l.arr + " " + l.arr_time) + wait;
-      }).join("<br>") + "</div>";
-    }
+    var parts = [];
+    legs.forEach(function (l, i) {
+      var depDoor = i === 0 && it.access_min && options.doors !== false ? '<div class="door">집에서 ' + it.access_min + "분 잡으면 " + esc(addMinutes(l.dep_time, -it.access_min)) + " 출발</div>" : "";
+      var arrDoor = i === legs.length - 1 && it.egress_min && options.doors !== false ? '<div class="door">역에서 목적지까지 ' + it.egress_min + "분</div>" : "";
+      if (i > 0) parts.push('<div class="xfer"><span>환승 대기</span><strong>' + diffMin(legs[i - 1].arr_time, l.dep_time) + "분</strong></div>");
+      parts.push('<div class="seg">' +
+        '<div class="stop"><div class="time">' + esc(l.dep_time) + '</div><div class="name">' + esc(l.dep) + "</div>" + depDoor + "</div>" +
+        '<div class="rail"><div class="train">' + esc(l.train_type + " " + l.train_no) + '</div><div class="line"></div><div>' + minutes(diffMin(l.dep_time, l.arr_time)) + "</div></div>" +
+        '<div class="stop arrive"><div class="time">' + esc(l.arr_time) + '</div><div class="name">' + esc(l.arr) + "</div>" + arrDoor + "</div>" +
+        "</div>");
+    });
+    var html = '<div class="chain' + (legs.length > 1 ? " multi" : "") + '">' + parts.join("") + "</div>";
     if (options.total && (it.access_min || it.egress_min)) {
       html += '<div class="note">집에서 목적지까지 <strong>' + minutes(it.total_min) + "</strong> 예상 (역 이동시간 포함)</div>";
     }
