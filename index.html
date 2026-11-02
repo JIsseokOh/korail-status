@@ -78,6 +78,11 @@
   .cand-card .rail { font-size: 12px; padding-top: 6px; }
   .cand-card .xfer { padding: 4px 9px; }
   .cand-sub { color: var(--muted); font-size: 12.5px; }
+  .cand-card.outside { opacity: 0.72; }
+  .more { display: none; }
+  .more.open { display: block; }
+  .btn { display: block; width: 100%; margin-top: 12px; padding: 11px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--accent); font: inherit; font-weight: 500; cursor: pointer; }
+  .btn:hover { background: var(--accent-soft); }
   details > summary { cursor: pointer; color: var(--accent); font-size: 14px; list-style: none; padding: 8px 0 2px; }
   details > summary::-webkit-details-marker { display: none; }
   details > summary::before { content: "▸ "; }
@@ -196,19 +201,30 @@
   }
   function legsCount(it) { return (it.legs || []).length; }
 
-  function candidateCard(c) {
+  var expanded = {};  // '다음 순위 더 보기' 를 누른 카드 — 90초마다 다시 그려도 펼친 상태를 유지합니다
+  var lastData = null;
+
+  function candidateCard(c, maxRank) {
+    var outside = maxRank && c.rank > maxRank;
     var pill = c.held ? '<span class="pill">지금 표</span>' : c.available ? '<span class="pill ok">좌석 있음</span>' : c.waiting ? '<span class="pill warn">예약대기 가능</span>' : '<span class="pill muted">매진</span>';
     var breakdown = (c.access_min || c.egress_min) ? '<span class="cand-sub">역까지 ' + c.access_min + "분 + 열차 " + minutes(c.duration_min) + " + 역에서 " + c.egress_min + "분</span>" : "";
-    return '<div class="cand-card' + (c.held ? " held" : "") + '"><div class="cand-head"><span class="rank">' + c.rank + '순위</span><span class="cand-total">' + minutes(c.total_min != null ? c.total_min : c.duration_min) + "</span>" + breakdown + pill + "</div>" + journeyHtml(c, { doors: false }) + "</div>";
+    var note = outside ? '<span class="cand-sub">예매 범위 밖</span>' : "";
+    return '<div class="cand-card' + (c.held ? " held" : "") + (outside ? " outside" : "") + '"><div class="cand-head"><span class="rank">' + c.rank + '순위</span><span class="cand-total">' + minutes(c.total_min != null ? c.total_min : c.duration_min) + "</span>" + breakdown + note + pill + "</div>" + journeyHtml(c, { doors: false }) + "</div>";
   }
 
-  function candidatesHtml(leg) {
+  function candidatesHtml(leg, key) {
     var cands = leg.candidates || [];
     if (!cands.length) return "";
-    var cards = cands.map(candidateCard);
+    var cards = cands.map(function (c) { return candidateCard(c, leg.max_rank); });
     var heading = leg.holding ? "더 좋은 경로 후보" : "노리고 있는 경로";
-    return '<div class="card"><h2>' + heading + "</h2>" +
-      cards.slice(0, 5).join("") + (cards.length > 5 ? '<details><summary>더 보기 (' + (cards.length - 5) + "개)</summary>" + cards.slice(5).join("") + "</details>" : "") + "</div>";
+    var html = '<div class="card"><h2>' + heading + "</h2>" + cards.slice(0, 5).join("");
+    var more = cards.slice(5, 10);
+    if (more.length) {
+      var open = !!expanded[key];
+      html += '<div class="more' + (open ? " open" : "") + '">' + more.join("") + "</div>" +
+        '<button type="button" class="btn" data-more="' + esc(key) + '">' + (open ? "접기" : "다음 순위 " + more.length + "개 더 보기") + "</button>";
+    }
+    return html + "</div>";
   }
 
   function historyHtml(leg, job) {
@@ -242,7 +258,7 @@
     if (cond.length) html += '<div class="note">조건: ' + esc(cond.join(" · ")) + "</div>";
     if (leg.error && leg.holding) html += '<div class="note" style="color:var(--bad)">' + esc(leg.error) + "</div>";
     html += "</div>";
-    if (leg.watching || !leg.holding) html += candidatesHtml(leg);
+    if (leg.watching || !leg.holding) html += candidatesHtml(leg, (job.job_id || "") + "-" + (leg.label || ""));
     html += historyHtml(leg, job);
     return html;
   }
@@ -269,6 +285,7 @@
   }
 
   function render(data) {
+    lastData = data;
     var running = data.jobs.filter(function (j) { return j.status === "running" || j.status === "starting"; });
     var past = data.jobs.filter(function (j) { return j.status !== "running" && j.status !== "starting"; });
     var html = "";
@@ -299,6 +316,13 @@
       .then(render)
       .catch(function (e) { document.getElementById("status-line").innerHTML = '<span class="dot off"></span>데이터를 불러오지 못했어요 (' + esc(e.message) + ")"; });
   }
+  document.addEventListener("click", function (e) {
+    var button = e.target.closest ? e.target.closest("[data-more]") : null;
+    if (!button) return;
+    var key = button.getAttribute("data-more");
+    expanded[key] = !expanded[key];
+    if (lastData) render(lastData);
+  });
   load();
   setInterval(load, 90000);
 })();
