@@ -240,9 +240,14 @@
     var st = legStatus(leg);
     var w = leg.window || {};
     var cond = [];
-    if (w.after) cond.push("집에서 " + hm(w.after) + " 이후 출발");
+    // 역 이동시간을 넣은 요청이면 '집에서/목적지에', 역 기준 요청이면 역 이름으로 보여 줍니다.
+    var doorBased = leg.door_based !== undefined ? !!leg.door_based : /\+/.test(leg.route || "");
+    if (w.after) cond.push((doorBased ? "집에서 " : (leg.dep || "") + "역 ") + hm(w.after) + " 이후 출발");
     if (w.latest) cond.push(w.latest + "까지 출발");
-    if (w.arrive_by) cond.push("목적지에 " + hm(w.arrive_by) + "까지 도착");
+    if (w.arrive_by) cond.push((doorBased ? "목적지에 " : (leg.arr || "") + "역에 ") + hm(w.arrive_by) + "까지 도착");
+    var filters = leg.filters || {};
+    if (filters.via && filters.via.length) cond.push("환승은 " + filters.via.join("·") + "에서만");
+    if (filters.first_type) cond.push("첫 열차는 " + filters.first_type + "만");
     if (leg.max_rank) cond.push("상위 " + leg.max_rank + "개 경로 안에서만 예매");
     var html = '<div class="card">' +
       '<h2>' + esc(leg.label === "편도" ? "여정" : leg.label) + "</h2>" +
