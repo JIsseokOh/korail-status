@@ -201,21 +201,26 @@
   }
   function legsCount(it) { return (it.legs || []).length; }
 
-  var expanded = {};  // '다음 순위 더 보기' 를 누른 카드 — 90초마다 다시 그려도 펼친 상태를 유지합니다
+  var expanded = {};  // '다음 순위 더 보기' 를 누른 카드 — 자동 갱신으로 다시 그려도 펼친 상태를 유지합니다
   var lastData = null;
 
-  function candidateCard(c, maxRank) {
+  function candidateCard(c, maxRank, rankBy) {
     var outside = maxRank && c.rank > maxRank;
+    var total = minutes(c.total_min != null ? c.total_min : c.duration_min);
+    var last = (c.legs || [])[(c.legs || []).length - 1];
+    // 도착 기준 순위(--rank-by arrival)면 머리에 도착 시각을 크게, 소요시간은 작은 글자로 보여 줍니다.
+    var headline = total, totalSub = "";
+    if (rankBy === "arrival" && last) { headline = (c.egress_min ? "목적지 " + addMinutes(last.arr_time, c.egress_min) : last.arr_time) + " 도착"; totalSub = '<span class="cand-sub">' + total + "</span>"; }
     var pill = c.held ? '<span class="pill">지금 표</span>' : c.available ? '<span class="pill ok">좌석 있음</span>' : c.waiting ? '<span class="pill warn">예약대기 가능</span>' : '<span class="pill muted">매진</span>';
     var breakdown = (c.access_min || c.egress_min) ? '<span class="cand-sub">역까지 ' + c.access_min + "분 + 열차 " + minutes(c.duration_min) + " + 역에서 " + c.egress_min + "분</span>" : "";
     var note = outside ? '<span class="cand-sub">예매 범위 밖</span>' : "";
-    return '<div class="cand-card' + (c.held ? " held" : "") + (outside ? " outside" : "") + '"><div class="cand-head"><span class="rank">' + c.rank + '순위</span><span class="cand-total">' + minutes(c.total_min != null ? c.total_min : c.duration_min) + "</span>" + breakdown + note + pill + "</div>" + journeyHtml(c, { doors: false }) + "</div>";
+    return '<div class="cand-card' + (c.held ? " held" : "") + (outside ? " outside" : "") + '"><div class="cand-head"><span class="rank">' + c.rank + '순위</span><span class="cand-total">' + esc(headline) + "</span>" + totalSub + breakdown + note + pill + "</div>" + journeyHtml(c, { doors: false }) + "</div>";
   }
 
   function candidatesHtml(leg, key) {
     var cands = leg.candidates || [];
     if (!cands.length) return "";
-    var cards = cands.map(function (c) { return candidateCard(c, leg.max_rank); });
+    var cards = cands.map(function (c) { return candidateCard(c, leg.max_rank, leg.rank_by); });
     var heading = leg.holding ? "더 좋은 경로 후보" : "노리고 있는 경로";
     var html = '<div class="card"><h2>' + heading + "</h2>" + cards.slice(0, 5).join("");
     var more = cards.slice(5, 10);
@@ -231,7 +236,7 @@
     var items = (leg.history || []).slice(-5).reverse().map(function (x) {
       return '<li><span class="when">' + esc(mdhm(x.at)) + "</span><span>" + esc(x.note || x.action) + (x.fee != null ? " (수수료 " + won(x.fee) + ")" : "") + "</span></li>";
     });
-    var next = job.status === "running" && job.next_check_at ? '<li><span class="when">다음 확인</span><span>' + esc(hm(job.next_check_at)) + " (지금까지 " + (job.checks || 0) + "번 확인)</span></li>" : "";
+    var next = job.status === "running" ? '<li><span class="when">확인 중</span><span>' + (job.interval ? "약 " + job.interval + "초마다 조회" : "주기적으로 조회") + " · 지금까지 " + (job.checks || 0) + "번</span></li>" : "";
     if (!items.length && !next) return "";
     return '<div class="card"><h2>진행 기록</h2><ul class="timeline">' + next + items.join("") + "</ul></div>";
   }
@@ -248,6 +253,7 @@
     var filters = leg.filters || {};
     if (filters.via && filters.via.length) cond.push("환승은 " + filters.via.join("·") + "에서만");
     if (filters.first_type) cond.push("첫 열차는 " + filters.first_type + "만");
+    if (leg.rank_by === "arrival") cond.push("도착이 이른 순으로 순위");
     if (leg.max_rank) cond.push("상위 " + leg.max_rank + "개 경로 안에서만 예매");
     var html = '<div class="card">' +
       '<h2>' + esc(leg.label === "편도" ? "여정" : leg.label) + "</h2>" +
@@ -315,11 +321,23 @@
   function fetchJson(url, options) {
     return fetch(url, options).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
   }
+  // 자동 갱신: 보이는 동안 REFRESH_MS 마다 다시 읽고, 다른 탭·앱에 있다가 돌아오면(visibilitychange · focus · 뒤로가기 복원 · 온라인 복귀) 바로 다시 읽습니다.
+  // GitHub API 는 IP 당 시간에 60회라 숨겨진 탭에서는 읽지 않고, 실패하면 raw(몇 분 늦을 수 있음)로 대신 읽습니다. 이미 그린 화면은 실패해도 지우지 않습니다.
+  var REFRESH_MS = 60000, MIN_GAP_MS = 8000;
+  var lastLoad = 0, loading = false;
   function load() {
+    if (loading) return;
+    loading = true;
+    lastLoad = Date.now();
     fetchJson(API_URL, { headers: { Accept: "application/vnd.github.raw" }, cache: "no-store" })
       .catch(function () { return fetchJson(DATA_URL + "?t=" + Date.now(), { cache: "no-store" }); })
       .then(render)
-      .catch(function (e) { document.getElementById("status-line").innerHTML = '<span class="dot off"></span>데이터를 불러오지 못했어요 (' + esc(e.message) + ")"; });
+      .catch(function (e) { if (!lastData) document.getElementById("status-line").innerHTML = '<span class="dot off"></span>데이터를 불러오지 못했어요 (' + esc(e.message) + ")"; })
+      .then(function () { loading = false; });
+  }
+  function refresh() {
+    if (document.visibilityState === "hidden" || Date.now() - lastLoad < MIN_GAP_MS) return;
+    load();
   }
   document.addEventListener("click", function (e) {
     var button = e.target.closest ? e.target.closest("[data-more]") : null;
@@ -329,7 +347,11 @@
     if (lastData) render(lastData);
   });
   load();
-  setInterval(load, 90000);
+  setInterval(refresh, REFRESH_MS);
+  document.addEventListener("visibilitychange", refresh);
+  window.addEventListener("focus", refresh);
+  window.addEventListener("online", refresh);
+  window.addEventListener("pageshow", function (e) { if (e.persisted) refresh(); });
 })();
 </script>
 </body>
